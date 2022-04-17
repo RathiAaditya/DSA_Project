@@ -36,7 +36,6 @@ public:
         if (mexist[number] == 1)
         {
             cout << "This contact number is already taken by:" << m[number] << endl;
-            TakeInput();
         }
         else if (name == "*")
         {
@@ -87,6 +86,7 @@ public:
                 }
                 j--;
             l2:
+                cout << "Enter the index for the number you want to delete " << endl;
                 int k;
                 cin >> k;
                 if (k > j)
@@ -97,15 +97,67 @@ public:
                 if (k == j)
                 {
                     cout << "Deleting the contact " << endl;
+                    mp[y].erase(mp[y].end());
                     // delete operation to be written
+                }
+                else if (k == 1)
+                {
+                    cout << "Deleting Contact " << endl;
+                    mp[y].erase(mp[y].begin());
+                }
+                else
+                {
+                    for (int g = k - 1; g < mp[y].size() - 1; g++)
+                    {
+                        mp[y][g] = mp[y][g + 1];
+                    }
+                    mp[y].pop_back();
+                    cout << "Deleting Contact" << endl;
                 }
             }
         }
         else if (x == 2)
         {
+        l7:
+            cout << "Enter the number you want to delete " << endl;
             cin >> z;
+            if (mexist[z] == 0)
+            {
+                cout << "Please Enter a contact number which is there in the phonebook " << endl;
+                goto l7;
+            }
             mexist[z] = 0;
+            string s = m[z];
             m[z] = "*";
+            int j = 1;
+            for (auto i : mp[s])
+            {
+                if (mp[s][j] == z)
+                    break;
+                else
+                    j++;
+            }
+            int k = mp[s].size();
+            if (k == j)
+            {
+                cout << "Deleting the contact " << endl;
+                mp[s].erase(mp[s].end());
+                // delete operation to be written
+            }
+            else if (k == 1)
+            {
+                cout << "Deleting Contact " << endl;
+                mp[s].erase(mp[s].begin());
+            }
+            else
+            {
+                for (int g = k - 1; g < mp[y].size() - 1; g++)
+                {
+                    mp[s][g] = mp[y][g + 1];
+                }
+                mp[s].pop_back();
+                cout << "Deleting Contact" << endl;
+            }
             // have to delete from mp
         }
         else
@@ -119,8 +171,11 @@ public:
     {
         for (auto i : m)
         {
-            cout << "Name:" << i.second << " "
-                 << " Number:" << i.first << endl;
+            if (i.second != "*")
+            {
+                cout << "Name:" << i.second << " "
+                     << " Number:" << i.first << endl;
+            }
         }
         cout << endl;
     }
@@ -149,17 +204,31 @@ public:
                 j++;
             }
             j--;
+            int index;
+            cout << "Enter the index of the contact you want to edit" << endl;
+            cin >> index;
+            int pnum = mp[y][index - 1];
+            mexist[pnum] = 0;
+            m[pnum] = '*';
+            cout << "Enter new phone number" << endl; // have to validate this using regex
+        l8:
+            int nnum;
+            cin >> nnum;
+            if (mexist[nnum] == 1)
+            {
+                cout << "This phone number is already in use by " << m[nnum] << endl;
+                cout << "Please kindly enter a valid contact number" << endl;
+                goto l8;
+            }
+            mexist[nnum] = 1;
+            mp[y][index - 1] = nnum;
+            m[nnum] = y;
+
             // again take input index from user then delete function
-            // also do mexist[this number]=0 and m[number]='*'
+            // also do mexist[this numbe r]=0 and m[number]='*'
 
             // or even instead of delete function take input number from user and just
-            // replace the previous number with this new num
-            int newnum;
-            cout << "Enter new phone number" << endl;
-            cin >> newnum;
-            // mp[y].pb(newnum);   if first approach is used
-            m[newnum] = y;
-            m[newnum] = 1;
+            // replace the previous number with this new num -->followed this approach
         }
         else if (x == 2)
         {
@@ -167,9 +236,9 @@ public:
             int phnum;
         l3:
             cin >> phnum;
-            if (m[phnum] == "*")
+            if (mexist[phnum] == 0)
             {
-                cout << "Please Enter valid Contact number " << endl;
+                cout << "Please Enter valid Contact number: " << endl;
                 goto l3;
             }
             string z = m[phnum];
