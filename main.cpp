@@ -1,289 +1,658 @@
+
 #include <bits/stdc++.h>
+#include <regex>
 #define pb push_back
-#define int long long
 using namespace std;
+#define SIZE 15
+typedef std::pair<std::string, std::string> pair;
+const int MOD = 1e9 + 7;
+// Class to store (key,value) pair
+void printChoices()
+{
+    cout << "Press 1 for Entering new Contact in the list" << endl;
+    cout << "Press 2 for Deleting  a Contact from the list" << endl;
+    cout << "Press 3 for Editing a Contact" << endl;
+    cout << "Press 4 for Displaying all the contacts" << endl;
+    cout << "Press 5 for Searching a Contact" << endl;
+    cout << "Press 6 to exit " << endl;
+}
+char TakeInput()
+{
+    cout << "Enter your choice " << endl;
+    char k;
+    cin >> k;
+    return k;
+}
+class HashNode
+{
+public:
+    string value;
+    string key;
+
+    // Constructor of hashnode
+    HashNode(string key, string value)
+    {
+        this->value = value;
+        this->key = key;
+    }
+};
+
+// Class for the map
+class HashMap
+{
+private:
+    // hash element array
+    HashNode **arr;
+
+    // current curr_size
+    int curr_size;
+    // sub node
+    HashNode *sub;
+
+public:
+    // Constructor for HashMap
+    HashMap()
+    {
+        // Initial SIZE of hash array
+        curr_size = 0;
+        arr = new HashNode *[SIZE];
+
+        // Initialise all elements of array as NULL
+        for (int i = 0; i < SIZE; i++)
+            arr[i] = NULL;
+        sub = new HashNode("*", "*");
+        // sub node with value and key *
+    }
+    // hash function to find index with given key
+    int hashFunc(string key)
+    {
+        int sum = 0;
+        string s = key;
+        for (int i = 0; s[i] != '\0'; i++)
+        {
+            sum = (sum + s[i] - '0') % MOD;
+        }
+        return sum % SIZE;
+    }
+    // Function to add key value pair
+    void insertContact(string key, string value)
+    {
+        HashNode *tmp = new HashNode(key, value);
+
+        // Apply hash function to find index for given key
+        int hIndex = hashFunc(key);
+
+        // find next free space
+        while (arr[hIndex] != NULL && arr[hIndex]->key != key && arr[hIndex]->key != "*")
+        {
+            hIndex++;
+            hIndex %= SIZE;
+        }
+        // if new is to be inserted size increased
+        if (arr[hIndex] == NULL || arr[hIndex]->key == "*")
+        {
+            curr_size++;
+        }
+        arr[hIndex] = tmp;
+    }
+
+    // Function to delete a key value pair
+    string deleteContact(string key)
+    {
+        // Apply hash function
+        int hIndex = hashFunc(key);
+
+        // finding the node with given key
+        while (arr[hIndex] != NULL)
+        {
+            // if node found
+            if (arr[hIndex]->key == key)
+            {
+                HashNode *tmp = arr[hIndex];
+
+                // Insert sub node
+                arr[hIndex] = sub;
+
+                // Reduce curr_size
+                curr_size--;
+                return tmp->value;
+            }
+            hIndex++;
+            hIndex %= SIZE;
+        }
+        // If not found return "*"
+        return "*";
+    }
+    // Function to update value for a given key
+    string Edit(string key, string value)
+    {
+        int hIndex = hashFunc(key);
+
+        int ctr = 0;
+
+        // finding the node with given key
+        while (arr[hIndex] != NULL)
+        {
+
+            if (ctr++ > SIZE)
+                return NULL;
+
+            // if node found return its value
+            if (arr[hIndex]->key == key)
+                arr[hIndex]->value = value;
+            hIndex++;
+            hIndex %= SIZE;
+        }
+
+        return "*";
+    }
+
+    // Function to search the value for a given key
+    string search(string key)
+    {
+        // Apply hash function to find index for given key
+        int hIndex = hashFunc(key);
+        int ctr = 0;
+        // finding the node with given key
+        while (arr[hIndex] != NULL)
+        {
+
+            if (ctr++ > SIZE) // to avoid infinite loop
+                return NULL;
+
+            // if node found return its value
+            if (arr[hIndex]->key == key)
+                return arr[hIndex]->value;
+            hIndex++;
+            hIndex %= SIZE;
+        }
+
+        // If not found return "-1"
+        return "-1";
+    }
+
+    // Return current curr_size
+    int getSize()
+    {
+        return curr_size;
+    }
+
+    // Return true if curr_size is 0
+    bool isEmpty()
+    {
+        return curr_size == 0;
+    }
+
+    // Function to display the stored key value pairs
+    void display()
+    {
+        if (getSize() == 0)
+        {
+            cout << "The Phonebook is Empty!!" << endl;
+        }
+        for (int i = 0; i < SIZE; i++)
+        {
+            if (arr[i] != NULL && arr[i]->key != "*")
+                cout << "Name : " << arr[i]->value << "\t"
+                     << "Number : " << arr[i]->key << endl;
+        }
+    }
+    bool regcheck(string patt)
+    {
+        // regex nummob("(0|91)?[7-9][0-9]{9}");
+        // regex numl("(020)?[0-9]{8}");
+        // return regex_match(patt, nummob) or regex_match(patt, numl);
+        return true;
+    }
+};
+// Phonebook main class
 class PhoneBook
 {
 private:
-    map<int, string> m;
-    map<int, int> mexist;
-    map<string, vector<int>> mp;
     string name;
-    int number;
+    string number;
+    HashMap *Phonebook = new HashMap; // Map matching contact numbers to names
+    map<string, vector<string>> mp;   // Map matching names to their contact numbers
 
 public:
-    void printChoices()
+    // Constructor for PhoneBook class
+    PhoneBook()
     {
-        cout << "Press 1 for Entering new Contact in the list" << endl;
-        cout << "Press 2 for Deleting  a Contact from the list" << endl;
-        cout << "Press 3 for Editing a Contact name" << endl;
-        cout << "Press 4 for Displaying all the contacts" << endl;
+        name = "\0";
+        number = "\0";
     }
-    int TakeInput()
+    int getSize()
     {
-        cout << "Enter your choice " << endl;
-        int k;
-        cin >> k;
-        return k;
-    }
-    void EnterContact()
-    {
-        cout << "Enter the name :" << endl;
-        cin >> name;
-        cout << "Enter the Phone Number :" << endl;
-        cin >> number; // validate the phone number using regex and check if it already exists
-        // bool f=false for regex
-        if (mexist[number] == 1)
-        {
-            cout << "This contact number is already taken by:" << m[number] << endl;
-        }
-        else if (name == "*")
-        {
-            cout << "You cannot save your contact using this name please try some other name" << endl;
-        }
-        // else if regex condition
-        else
-        {
-            mexist[number] = 1;
-            m[number] = name;
-            mp[name].pb(number);
-            cout << "Contact has been saved " << endl;
-        }
-    }
-    void DeleteContact()
-    {
-        int x, z;
-        string y;
-        cout << "Enter 1 for delete by name " << endl;
-        cout << "Enter 2 for delete by number" << endl;
-        cin >> x;
-        if (x == 1)
-        {
-        l1:
-            cin >> y;
-            if (mp[y].size() == 0)
-            {
-                cout << "Please check whether you have entered your name correctly" << endl;
-                goto l1;
-            }
-            else if (mp[y].size() == 1)
-            {
-                cout << "Deleting contact" << endl;
-                int p = mp[y].back();
-                mp[y].pop_back();
-                m[p] = "*";
-                mexist[p] = 0;
-            }
-            else
-            {
-                cout << "Multiple contact numbers with this name exist " << endl;
-                cout << "Please specify the value which you want to delete " << endl;
-                int j = 1;
-                for (auto i : mp[y])
-                {
-                    cout << j << " " << i << endl;
-                    j++;
-                }
-                j--;
-            l2:
-                cout << "Enter the index for the number you want to delete " << endl;
-                int k;
-                cin >> k;
-                if (k > j)
-                {
-                    cout << "Please Enter a valid index for deleting" << endl;
-                    goto l2;
-                }
-                if (k == j)
-                {
-                    cout << "Deleting the contact " << endl;
-                    mp[y].erase(mp[y].end());
-                    // delete operation to be written
-                }
-                else if (k == 1)
-                {
-                    cout << "Deleting Contact " << endl;
-                    mp[y].erase(mp[y].begin());
-                }
-                else
-                {
-                    for (int g = k - 1; g < mp[y].size() - 1; g++)
-                    {
-                        mp[y][g] = mp[y][g + 1];
-                    }
-                    mp[y].pop_back();
-                    cout << "Deleting Contact" << endl;
-                }
-            }
-        }
-        else if (x == 2)
-        {
-        l7:
-            cout << "Enter the number you want to delete " << endl;
-            cin >> z;
-            if (mexist[z] == 0)
-            {
-                cout << "Please Enter a contact number which is there in the phonebook " << endl;
-                goto l7;
-            }
-            mexist[z] = 0;
-            string s = m[z];
-            m[z] = "*";
-            int j = 1;
-            for (auto i : mp[s])
-            {
-                if (mp[s][j] == z)
-                    break;
-                else
-                    j++;
-            }
-            int k = mp[s].size();
-            if (k == j)
-            {
-                cout << "Deleting the contact " << endl;
-                mp[s].erase(mp[s].end());
-                // delete operation to be written
-            }
-            else if (k == 1)
-            {
-                cout << "Deleting Contact " << endl;
-                mp[s].erase(mp[s].begin());
-            }
-            else
-            {
-                for (int g = k - 1; g < mp[y].size() - 1; g++)
-                {
-                    mp[s][g] = mp[y][g + 1];
-                }
-                mp[s].pop_back();
-                cout << "Deleting Contact" << endl;
-            }
-            // have to delete from mp
-        }
-        else
-        {
-            cout << "Please Enter only 1 or 2 " << endl;
-            DeleteContact();
-        }
+        return Phonebook->getSize();
     }
 
-    void DisplayContact()
+    // Function to enter a new contact in the Phonebook
+    void EnterContact()
     {
-        for (auto i : m)
+        if (SIZE == Phonebook->getSize())
         {
-            if (i.second != "*")
-            {
-                cout << "Name:" << i.second << " "
-                     << " Number:" << i.first << endl;
-            }
+            cout << "Please delete contact if you want to enter more " << endl;
+            return;
         }
-        cout << endl;
+        cout << "Enter the name :" << endl;
+        cin.ignore();
+        getline(cin, name);
+        cout << "Enter the Phone Number :" << endl;
+    rep:
+        cin >> number;
+        if (!Phonebook->regcheck(number))
+        {
+            cout << "Not a valid number." << endl;
+            cout << "Please enter a valid number" << endl;
+            goto rep;
+        }
+        // Checking for duplicate phone number entry
+        if (Phonebook->search(number) != "-1")
+        {
+            cout << "Number is already registered to: " << Phonebook->search(number) << endl;
+            cout << "Please enter another number: " << endl;
+            goto rep;
+        }
+        mp[name].pb(number);
+        Phonebook->insertContact(number, name);
+        if (Phonebook->getSize() == SIZE)
+        {
+            cout << "WARNING: The phonebook is out of space " << endl;
+            cout << endl;
+        }
     }
-    void EditContact()
+    // Function to delete existing contacts
+    void DeleteContact()
     {
-    l5:
+        if (Phonebook->getSize() == 0)
+        {
+            cout << "The Phonebook directory is empty" << endl;
+            cout << "You cannot edit any contacts " << endl;
+            cout << endl;
+            return;
+        }
+        string num;
+        string newname;
         int x;
-        cout << "Enter 1 to edit by name" << endl;
-        cout << "Enter 2 to edit by number" << endl;
+        cout << "Enter 1 to delete by name" << endl;
+        cout << "Enter 2 to delete by number" << endl;
         cin >> x;
         if (x == 1)
         {
         l4:
             string y;
             cout << "Please Enter the name of the person" << endl;
-            cin >> y;
-            if (mp[y].size() == 0)
+            cin.ignore();
+            getline(cin, y);
+
+            if (y.length() == 0)
             {
                 cout << "Please enter a valid string " << endl;
                 goto l4;
             }
-            int j = 1;
-            for (auto i : mp[y])
+            if (mp[y].size() == 0)
             {
-                cout << j << " " << i << endl;
-                j++;
+                cout << "The name is not in the phonebook directory" << endl;
+                mp.erase(y);
+                goto l4;
             }
-            j--;
-            int index;
-            cout << "Enter the index of the contact you want to edit" << endl;
-            cin >> index;
-            int pnum = mp[y][index - 1];
-            mexist[pnum] = 0;
-            m[pnum] = '*';
-            cout << "Enter new phone number" << endl; // have to validate this using regex
-        l8:
-            int nnum;
-            cin >> nnum;
-            if (mexist[nnum] == 1)
+
+            if (mp[y].size() == 1)
             {
-                cout << "This phone number is already in use by " << m[nnum] << endl;
+                string pnum = mp[y][0];
+                string k = Phonebook->deleteContact(pnum); // the return type of the function is string
+                cout << "You deleted contact of person" << k << endl;
+                cout << endl;
+                mp[y].pop_back();
+                mp.erase(y);
+                cout << "The contact has been deleted successfully" << endl;
+            }
+            else
+            {
+                int index, j = 1;
+                for (auto i : mp[y])
+                {
+                    cout << j << " " << i << endl;
+                    j++;
+                }
+                j--;
+                cout << "Enter the index of the contact you want to delete " << endl;
+            in2:
+                cin >> index;
+                if (index > mp[y].size() or index < 1)
+                {
+                    cout << "Please enter a valid index" << endl;
+                    goto in2;
+                }
+                string pnum = mp[y][index - 1];
+
+                cout << "You deleted Contact number of person " << Phonebook->deleteContact(pnum) << endl;
+                cout << endl;
+                j = 0;
+                for (auto i : mp[y])
+                {
+                    if (i == pnum)
+                        break;
+                    else
+                        j++;
+                }
+                int k = mp[y].size();
+                if (k == 1 or k - 1 == j)
+                {
+                    mp[y].pop_back();
+                    if (k == 1)
+                    {
+                        mp.erase(y);
+                    }
+                }
+                else
+                {
+                    for (int g = j; g < k - 1; g++)
+                    {
+                        mp[y][g] = mp[y][g + 1];
+                    }
+                    mp[y].pop_back();
+                }
+            }
+        }
+
+        else if (x == 2)
+        {
+            cout << "Enter the contact number" << endl;
+
+        up:
+            string phnum;
+            cin >> phnum;
+            if (Phonebook->search(phnum) == "-1")
+            {
+                cout << "This phone number is not in the directory" << endl;
+                cout << "Please kindly enter a valid contact number" << endl;
+                goto up;
+            }
+            string p = Phonebook->search(phnum);
+            cout << "You deleted the contact of person " << Phonebook->deleteContact(phnum) << endl;
+
+            int j = 0;
+            for (auto i : mp[p])
+            {
+                if (i == phnum)
+                    break;
+                else
+                    j++;
+            }
+            int k = mp[p].size();
+            if (k == 1 or k - 1 == j)
+            {
+                mp[p].pop_back();
+            }
+            else
+            {
+                for (int g = j; g < k - 1; g++)
+                {
+                    mp[p][g] = mp[p][g + 1];
+                }
+                mp[p].pop_back();
+            }
+        }
+        else
+        {
+            cout << "Please Enter only 1 or 2 " << endl;
+            DeleteContact();
+        }
+        cout << "Delete Successful!" << endl;
+    }
+    // Function to display the PhoneBook
+    void DisplayContact()
+    {
+        Phonebook->display();
+        cout << endl;
+    }
+    // Function to update fields in the PhoneBook
+    void EditContact()
+    {
+        if (Phonebook->getSize() == 0)
+        {
+            cout << "The Phonebook directory is empty" << endl;
+            cout << "You cannot edit any contacts " << endl;
+            cout << endl;
+            return;
+        }
+        string num;
+        string newname;
+        int x;
+        cout << "Enter 1 to edit by name" << endl;
+        cout << "Enter 2 to edit by number" << endl;
+        cin >> x;
+
+        if (x == 1)
+        {
+        l4:
+            string y;
+            cout << "Please Enter the name of the person" << endl;
+            cin.ignore();
+            getline(cin, y);
+
+            if (y.length() == 0)
+            {
+                cout << "Please enter a valid string " << endl;
+                goto l4;
+            }
+            if (mp[y].size() == 0)
+            {
+
+                cout << "The name is not in the phonebook directory" << endl;
+                mp.erase(y);
+                goto l4;
+            }
+            int j = 1;
+            int index = 1;
+            if (mp[y].size() > 1)
+            {
+                cout << "Enter the index of the contact you want to edit" << endl;
+            in1:
+                for (auto i : mp[y])
+                {
+                    cout << j << " " << i << endl;
+                    j++;
+                }
+                j--;
+                cin >> index;
+                if (index > mp[y].size() or index < 1)
+                {
+                    cout << "Please enter a valid index" << endl;
+                    goto in1;
+                }
+            }
+            cout << "Enter new phone number" << endl;
+        l8:
+            string nnum;
+            cin >> nnum;
+            if (!Phonebook->regcheck(nnum))
+            {
+                cout << "Not a valid phone number" << endl;
+                cout << "Please enter a valid contact number" << endl;
+                goto l8;
+            }
+            if (nnum == mp[y][index - 1])
+            {
+                cout << "New number cannot be same as old number" << endl;
+                cout << "Please enter a new phone number" << endl;
+                goto l8;
+            }
+            if (Phonebook->search(nnum) != "-1")
+            {
+                cout << "This phone number is already in use by " << Phonebook->search(nnum) << endl;
                 cout << "Please kindly enter a valid contact number" << endl;
                 goto l8;
             }
-            mexist[nnum] = 1;
-            mp[y][index - 1] = nnum;
-            m[nnum] = y;
-
-            // again take input index from user then delete function
-            // also do mexist[this numbe r]=0 and m[number]='*'
-
-            // or even instead of delete function take input number from user and just
-            // replace the previous number with this new num -->followed this approach
+            else
+            {
+                string pnum = mp[y][index - 1];
+                Phonebook->deleteContact(pnum);
+                Phonebook->insertContact(nnum, y);
+                mp[y][index - 1] = nnum;
+                cout << "Edit Successful!" << endl;
+            }
         }
         else if (x == 2)
         {
             cout << "Enter the contact number" << endl;
-            int phnum;
-        l3:
+        up:
+            string phnum;
             cin >> phnum;
-            if (mexist[phnum] == 0)
+            if (!Phonebook->regcheck(phnum))
             {
-                cout << "Please Enter valid Contact number: " << endl;
-                goto l3;
+                cout << "Not a valid phone number" << endl;
+                cout << "Please enter a valid contact number" << endl;
+                goto up;
             }
-            string z = m[phnum];
-            // delete number from the string int mapping have to write a delete function for this
-            string y;
+            if (Phonebook->search(phnum) == "-1")
+            {
+                cout << "This phone number is not in the directory" << endl;
+                cout << "Please kindly enter a valid contact number" << endl;
+                goto up;
+            }
             cout << "Enter the new name " << endl;
-            cin >> y;
-            m[phnum] = y;
-            mp[y].pb(phnum);
+            string str;
+            cin.ignore();
+            getline(cin, str);
+            string p = Phonebook->search(phnum);
+            Phonebook->Edit(phnum, str);
+
+            int j = 0;
+            for (auto i : mp[p])
+            {
+                if (i == phnum)
+                    break;
+                else
+                    j++;
+            }
+            int k = mp[p].size();
+            if (k == 1 or k - 1 == j)
+            {
+                mp[p].pop_back();
+                if (k == 1)
+                    mp.erase(p);
+            }
+            else
+            {
+                for (int g = j; g < k - 1; g++)
+                {
+                    mp[p][g] = mp[p][g + 1];
+                }
+                mp[p].pop_back();
+            }
+            mp[str].pb(phnum);
+            cout << "Edit Successful!" << endl;
         }
         else
         {
-            cout << "Please Enter 1 or 2 only " << endl;
-            goto l5;
+            cout << "Please Enter only 1 or 2 " << endl;
+            EditContact();
+        }
+    }
+    // Function to retrieve information from the Phonebook
+    void Search()
+    {
+        if (Phonebook->getSize() == 0)
+        {
+            cout << "The Phonebook directory is empty" << endl;
+            cout << "You cannot search any contacts " << endl;
+            cout << endl;
+            return;
+        }
+        string num;
+        string newname;
+        int x;
+        cout << "Enter 1 to search by name" << endl;
+        cout << "Enter 2 to search by number" << endl;
+        cin >> x;
+
+        if (x == 1)
+        {
+        l4:
+            string y;
+            cout << "Please Enter the name of the person" << endl;
+            cin.ignore();
+            getline(cin, y);
+
+            if (y.length() == 0)
+            {
+                cout << "Please enter a valid string " << endl;
+                goto l4;
+            }
+            if (mp[y].size() == 0)
+            {
+                cout << "The name is not in the phonebook directory" << endl;
+                mp.erase(y);
+            }
+            for (auto i : mp[y])
+            {
+                cout << i << " ";
+            }
+        }
+        else if (x == 2)
+        {
+        up:
+            string phnum;
+            cin >> phnum;
+            if (Phonebook->search(phnum) == "-1")
+            {
+                cout << "This phone number is not in the directory" << endl;
+                cout << "Please kindly enter a valid contact number" << endl;
+                goto up;
+            }
+            cout << "Enter the contact number" << endl;
+
+            cout << Phonebook->search(phnum) << endl;
+        }
+        else
+        {
+            cout << "Please Enter only 1 or 2 " << endl;
+            Search();
         }
     }
 };
-
+// driver code
 void solve()
 {
     PhoneBook pbk;
-    int num;
-    // First taking input from a text file then from user
-    bool choice = true;
-    while (choice)
+    char num;
+
+    // bool choice = true;
+    bool var = true;
+    while (var)
     {
-        pbk.printChoices();
-        num = pbk.TakeInput(); // this is for choice 1
+
+        printChoices();
+        num = TakeInput(); // this is for choice 1
         switch (num)
         {
-        case 1:
+        case '1':
             pbk.EnterContact();
             break;
-        case 2:
+        case '2':
             pbk.DeleteContact();
             break;
-        case 3:
+        case '3':
             pbk.EditContact();
             break;
-        case 4:
+        case '4':
             pbk.DisplayContact();
             break;
+        case '5':
+            pbk.Search();
+            break;
+        case '6':
+            var = false;
+            break;
+        default:
+            cout << "Please Enter a valid number" << endl;
+            cout << endl;
         }
     }
 }
+
 int32_t main()
 {
     solve();
