@@ -1,11 +1,11 @@
 
+
 #include <bits/stdc++.h>
 #include <regex>
 #define pb push_back
 using namespace std;
-#define SIZE 15
-typedef std::pair<std::string, std::string> pair;
-const int MOD = 1e9 + 7;
+#define SIZE 1009
+const int MOD = 1e9 + 7, p = 31;
 // Class to store (key,value) pair
 void printChoices()
 {
@@ -74,6 +74,18 @@ public:
         }
         return sum % SIZE;
     }
+
+    // int hashFunc(string s)
+    // {
+    //     long long int pvalue=1;
+    //    long long int hashsum=0;
+    //    for(int i=0;i<s.length();i++)
+    //    {
+    //    hashsum=(hashsum+(s[i]-'0')*pvalue)%MOD;
+    //    pvalue=(pvalue*p)%MOD;
+    //    }
+    //    return hashsum%SIZE;
+    // }
     // Function to add key value pair
     void insertContact(string key, string value)
     {
@@ -83,16 +95,13 @@ public:
         int hIndex = hashFunc(key);
 
         // find next free space
-        while (arr[hIndex] != NULL && arr[hIndex]->key != key && arr[hIndex]->key != "*")
+        while (arr[hIndex] != NULL && arr[hIndex]->key != "*")
         {
             hIndex++;
             hIndex %= SIZE;
         }
         // if new is to be inserted size increased
-        if (arr[hIndex] == NULL || arr[hIndex]->key == "*")
-        {
-            curr_size++;
-        }
+        curr_size++;
         arr[hIndex] = tmp;
     }
 
@@ -101,10 +110,12 @@ public:
     {
         // Apply hash function
         int hIndex = hashFunc(key);
-
+        int ctr = 0;
         // finding the node with given key
         while (arr[hIndex] != NULL)
         {
+            if (ctr++ > SIZE)
+                return "-1";
             // if node found
             if (arr[hIndex]->key == key)
             {
@@ -135,7 +146,7 @@ public:
         {
 
             if (ctr++ > SIZE)
-                return NULL;
+                return "-1";
 
             // if node found return its value
             if (arr[hIndex]->key == key)
@@ -158,7 +169,7 @@ public:
         {
 
             if (ctr++ > SIZE) // to avoid infinite loop
-                return NULL;
+                return "-1";
 
             // if node found return its value
             if (arr[hIndex]->key == key)
@@ -201,7 +212,7 @@ public:
     {
         // regex nummob("(0|91)?[7-9][0-9]{9}");
         // regex numl("(020)?[0-9]{8}");
-        // return regex_match(patt, nummob) or regex_match(patt, numl);
+        // return regex_match(patt, nummob);
         return true;
     }
 };
@@ -235,23 +246,22 @@ public:
             return;
         }
         cout << "Enter the name :" << endl;
-        cin.ignore();
-        getline(cin, name);
+        getline(cin >> ws, name);
         cout << "Enter the Phone Number :" << endl;
-    rep:
+    l1:
         cin >> number;
         if (!Phonebook->regcheck(number))
         {
             cout << "Not a valid number." << endl;
             cout << "Please enter a valid number" << endl;
-            goto rep;
+            goto l1;
         }
         // Checking for duplicate phone number entry
         if (Phonebook->search(number) != "-1")
         {
             cout << "Number is already registered to: " << Phonebook->search(number) << endl;
             cout << "Please enter another number: " << endl;
-            goto rep;
+            goto l1;
         }
         mp[name].pb(number);
         Phonebook->insertContact(number, name);
@@ -279,22 +289,23 @@ public:
         cin >> x;
         if (x == 1)
         {
-        l4:
+        l2:
             string y;
             cout << "Please Enter the name of the person" << endl;
-            cin.ignore();
-            getline(cin, y);
+
+            getline(cin >> ws, y);
 
             if (y.length() == 0)
             {
-                cout << "Please enter a valid string " << endl;
-                goto l4;
+                cout << y << endl;
+                cout << "Please enter a valid string fuck" << endl;
+                goto l2;
             }
             if (mp[y].size() == 0)
             {
                 cout << "The name is not in the phonebook directory" << endl;
                 mp.erase(y);
-                goto l4;
+                goto l2;
             }
 
             if (mp[y].size() == 1)
@@ -317,12 +328,12 @@ public:
                 }
                 j--;
                 cout << "Enter the index of the contact you want to delete " << endl;
-            in2:
+            l3:
                 cin >> index;
                 if (index > mp[y].size() or index < 1)
                 {
                     cout << "Please enter a valid index" << endl;
-                    goto in2;
+                    goto l3;
                 }
                 string pnum = mp[y][index - 1];
 
@@ -360,14 +371,14 @@ public:
         {
             cout << "Enter the contact number" << endl;
 
-        up:
+        l4:
             string phnum;
             cin >> phnum;
             if (Phonebook->search(phnum) == "-1")
             {
                 cout << "This phone number is not in the directory" << endl;
                 cout << "Please kindly enter a valid contact number" << endl;
-                goto up;
+                goto l4;
             }
             string p = Phonebook->search(phnum);
             cout << "You deleted the contact of person " << Phonebook->deleteContact(phnum) << endl;
@@ -426,30 +437,29 @@ public:
 
         if (x == 1)
         {
-        l4:
+        l5:
             string y;
             cout << "Please Enter the name of the person" << endl;
-            cin.ignore();
-            getline(cin, y);
+            getline(cin >> ws, y);
 
             if (y.length() == 0)
             {
                 cout << "Please enter a valid string " << endl;
-                goto l4;
+                goto l5;
             }
             if (mp[y].size() == 0)
             {
 
                 cout << "The name is not in the phonebook directory" << endl;
                 mp.erase(y);
-                goto l4;
+                goto l5;
             }
             int j = 1;
             int index = 1;
             if (mp[y].size() > 1)
             {
                 cout << "Enter the index of the contact you want to edit" << endl;
-            in1:
+            l6:
                 for (auto i : mp[y])
                 {
                     cout << j << " " << i << endl;
@@ -460,30 +470,31 @@ public:
                 if (index > mp[y].size() or index < 1)
                 {
                     cout << "Please enter a valid index" << endl;
-                    goto in1;
+                    goto l6;
                 }
             }
+
             cout << "Enter new phone number" << endl;
-        l8:
+        l7:
             string nnum;
             cin >> nnum;
             if (!Phonebook->regcheck(nnum))
             {
                 cout << "Not a valid phone number" << endl;
                 cout << "Please enter a valid contact number" << endl;
-                goto l8;
+                goto l7;
             }
             if (nnum == mp[y][index - 1])
             {
                 cout << "New number cannot be same as old number" << endl;
                 cout << "Please enter a new phone number" << endl;
-                goto l8;
+                goto l7;
             }
             if (Phonebook->search(nnum) != "-1")
             {
                 cout << "This phone number is already in use by " << Phonebook->search(nnum) << endl;
                 cout << "Please kindly enter a valid contact number" << endl;
-                goto l8;
+                goto l7;
             }
             else
             {
@@ -497,25 +508,24 @@ public:
         else if (x == 2)
         {
             cout << "Enter the contact number" << endl;
-        up:
+        l8:
             string phnum;
             cin >> phnum;
             if (!Phonebook->regcheck(phnum))
             {
                 cout << "Not a valid phone number" << endl;
                 cout << "Please enter a valid contact number" << endl;
-                goto up;
+                goto l8;
             }
             if (Phonebook->search(phnum) == "-1")
             {
                 cout << "This phone number is not in the directory" << endl;
                 cout << "Please kindly enter a valid contact number" << endl;
-                goto up;
+                goto l8;
             }
             cout << "Enter the new name " << endl;
             string str;
-            cin.ignore();
-            getline(cin, str);
+            getline(cin >> ws, str);
             string p = Phonebook->search(phnum);
             Phonebook->Edit(phnum, str);
 
@@ -570,37 +580,38 @@ public:
 
         if (x == 1)
         {
-        l4:
+        l9:
             string y;
             cout << "Please Enter the name of the person" << endl;
-            cin.ignore();
-            getline(cin, y);
+            getline(cin >> ws, y);
 
             if (y.length() == 0)
             {
                 cout << "Please enter a valid string " << endl;
-                goto l4;
+                goto l9;
             }
             if (mp[y].size() == 0)
             {
                 cout << "The name is not in the phonebook directory" << endl;
                 mp.erase(y);
+                goto l9;
             }
             for (auto i : mp[y])
             {
-                cout << i << " ";
+                cout << i << endl;
             }
+            cout << endl;
         }
         else if (x == 2)
         {
-        up:
+        l10:
             string phnum;
             cin >> phnum;
             if (Phonebook->search(phnum) == "-1")
             {
                 cout << "This phone number is not in the directory" << endl;
                 cout << "Please kindly enter a valid contact number" << endl;
-                goto up;
+                goto l10;
             }
             cout << "Enter the contact number" << endl;
 
